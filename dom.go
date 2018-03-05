@@ -997,7 +997,12 @@ func render(next, prev ComponentOrHTML) (nextHTML *HTML, skip bool, pendingMount
 func renderComponent(next Component, prev ComponentOrHTML) (nextHTML *HTML, skip bool, pendingMounts []Mounter) {
 	// If we had a component last render, and it's of compatible type, operate
 	// on the previous instance.
-	if prevComponent, ok := prev.(Component); ok && sameType(next, prevComponent) {
+	prevComponent, hasPrevComponent := prev.(Component)
+	if hasPrevComponent {
+		hasPrevComponent = sameType(next, prevComponent)
+	}
+
+	if hasPrevComponent {
 		// Copy `vecty:"prop"` fields from the newly rendered component (next)
 		// into the persistent component instance (prev) so that it is aware of
 		// what properties the parent has specified during SkipRender/Render
@@ -1020,7 +1025,12 @@ func renderComponent(next Component, prev ComponentOrHTML) (nextHTML *HTML, skip
 	}
 
 	// Render the component into HTML, handling nil renders.
-	nextRender := next.Render()
+	var nextRender ComponentOrHTML
+	if hasPrevComponent {
+		nextRender = prevComponent.Render()
+	} else {
+		nextRender = next.Render()
+	}
 	prevRender := next.Context().prevRender
 	if nextRender == nil {
 		// nil renders are translated into noscript tags.
@@ -1052,7 +1062,11 @@ func renderComponent(next Component, prev ComponentOrHTML) (nextHTML *HTML, skip
 
 	// Update the context to consider this render.
 	next.Context().prevRender = nextRender
-	next.Context().prevRenderComponent = copyComponent(next)
+	if hasPrevComponent {
+		next.Context().prevRenderComponent = prevComponent
+	} else {
+		next.Context().prevRenderComponent = next
+	}
 	next.Context().unmounted = false
 	return nextHTML, false, pendingMounts
 }
