@@ -17,6 +17,14 @@ type Core struct {
 	mounted, unmounted  bool
 }
 
+func (c *Core) Node() *js.Object {
+	html := extractHTML(c.prevRender)
+	if html != nil {
+		return html.Node()
+	}
+	return nil
+}
+
 // Context implements the Component interface.
 func (c *Core) Context() *Core { return c }
 
