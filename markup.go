@@ -1,8 +1,6 @@
 package vecty
 
 import (
-	"reflect"
-
 	"github.com/gopherjs/gopherjs/js"
 )
 
@@ -68,7 +66,7 @@ func apply(m MarkupOrChild, h *HTML) {
 	case Component, *HTML, List, KeyedList:
 		h.children = append(h.children, m.(ComponentOrHTML))
 	default:
-		panic("vecty: internal error (unexpected MarkupOrChild type " + reflect.TypeOf(m).String() + ")")
+		panicInvalidType(m)
 	}
 }
 
